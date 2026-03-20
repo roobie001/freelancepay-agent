@@ -2,17 +2,18 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "C:\\Users\\melob\\Desktop\\freelancepay-agent\\contracts\\FreelancePay.sol": {
-      "lastModificationDate": 1773357640495,
-      "contentHash": "073fcec6c2fb05c9f1c5a86b529f0826",
+      "lastModificationDate": 1773960006594,
+      "contentHash": "3ab3393aefbec7c86ea02506b219ba8d",
       "sourceName": "contracts/FreelancePay.sol",
       "solcConfig": {
         "version": "0.8.20",
         "settings": {
-          "evmVersion": "paris",
           "optimizer": {
-            "enabled": false,
+            "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
+          "evmVersion": "paris",
           "outputSelection": {
             "*": {
               "*": [
@@ -36,6 +37,80 @@
       "artifacts": [
         "FreelancePay",
         "IERC20"
+      ]
+    },
+    "C:\\Users\\melob\\Desktop\\freelancepay-agent\\contracts\\AgentIdentityRegistry.sol": {
+      "lastModificationDate": 1773961060746,
+      "contentHash": "7e76482a3b2410abe84f811ed5c8bcc0",
+      "sourceName": "contracts/AgentIdentityRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "AgentIdentityRegistry"
+      ]
+    },
+    "C:\\Users\\melob\\Desktop\\freelancepay-agent\\contracts\\AgentReputationRegistry.sol": {
+      "lastModificationDate": 1773960091118,
+      "contentHash": "92b8e42fa96a70c7169c61ddbc211836",
+      "sourceName": "contracts/AgentReputationRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "AgentReputationRegistry"
       ]
     }
   }

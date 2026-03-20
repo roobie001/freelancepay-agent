@@ -28,16 +28,46 @@ export default function DisputePage() {
   const handleResolve = async () => {
     setLoading(true);
     try {
+      let jobData = { description: "" };
+      try {
+        const jobRes = await fetch(`/api/jobs/${jobId}`);
+        if (jobRes.ok) {
+          jobData = await jobRes.json();
+        }
+      } catch (e) {
+        console.warn("Failed to fetch job details, using empty description.");
+      }
+
       const res = await resolveJobDispute(
         jobId,
-        { description: "" },
+        jobData,
         submission,
       );
       setResult(res);
-      if (res.approved && process.env.NEXT_PUBLIC_FREELANCEPAY_ADDRESS) {
+      if (process.env.NEXT_PUBLIC_FREELANCEPAY_ADDRESS) {
         const { resolveDisputeOnChain } = await import("../../lib/contract");
-        await resolveDisputeOnChain(parseInt(jobId), true);
-        alert("Dispute approval submitted on-chain");
+        await resolveDisputeOnChain(parseInt(jobId), !!res.approved);
+        alert("Dispute decision submitted on-chain");
+      }
+
+      if (process.env.NEXT_PUBLIC_REPUTATION_REGISTRY) {
+        const { submitReputationOnChain } = await import("../../lib/reputation");
+        const freelancerId = jobData?.freelancer?.agentId;
+        const clientId = jobData?.client?.agentId;
+        const metadata = JSON.stringify({
+          jobId,
+          approved: !!res.approved,
+          reason: res.reasoning,
+        });
+
+        if (typeof freelancerId === "number") {
+          const rating = res.approved ? 1 : -1;
+          await submitReputationOnChain(freelancerId, rating, metadata);
+        }
+        if (typeof clientId === "number") {
+          const rating = res.approved ? 0 : 1;
+          await submitReputationOnChain(clientId, rating, metadata);
+        }
       }
     } catch (e) {
       console.error(e);

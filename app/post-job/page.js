@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useActiveAccount } from "thirdweb/react";
 import { postJobOnChain } from "../../lib/contract";
-import { mockContract } from "../../lib/mockContract";
 import Nav from "../Nav";
 
 export default function PostJob() {
@@ -11,6 +10,7 @@ export default function PostJob() {
   const [jobTitle, setJobTitle] = useState("");
   const [description, setDescription] = useState("");
   const [budget, setBudget] = useState("");
+  const [milestones, setMilestones] = useState("");
   const [loading, setLoading] = useState(false);
 
   if (!account) {
@@ -30,23 +30,87 @@ export default function PostJob() {
     e.preventDefault();
     setLoading(true);
     try {
-      let result;
-      if (process.env.NEXT_PUBLIC_FREELANCEPAY_ADDRESS) {
-        result = await postJobOnChain(jobTitle, description, budget);
-      } else {
-        result = await mockContract.postJob(
-          jobTitle,
-          description,
-          parseInt(budget),
-        );
+      const milestoneAmounts = milestones
+        .split(",")
+        .map((m) => m.trim())
+        .filter((m) => m.length > 0)
+        .map((m) => parseFloat(m))
+        .filter((m) => Number.isFinite(m) && m > 0);
+
+      const totalBudget = milestoneAmounts.length
+        ? milestoneAmounts.reduce((sum, m) => sum + m, 0)
+        : parseFloat(budget);
+
+      if (!totalBudget || totalBudget <= 0) {
+        throw new Error("Please enter a valid budget or milestones.");
       }
-      alert(`Job posted! Job ID: ${result.jobId}`);
+
+      // First create job in database
+      const dbResponse = await fetch("/api/jobs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: jobTitle,
+          description,
+          budget: totalBudget,
+          clientAddress: account.address,
+          milestones: milestoneAmounts,
+        }),
+      });
+
+      if (!dbResponse.ok) {
+        const error = await dbResponse.json();
+        throw new Error(error.error || "Failed to create job in database");
+      }
+
+      const dbJob = await dbResponse.json();
+
+      // Then try to post on blockchain if contract is configured
+      if (process.env.NEXT_PUBLIC_FREELANCEPAY_ADDRESS) {
+        try {
+          const { postJobWithMilestonesOnChain } = await import(
+            "../../lib/contract"
+          );
+          const blockchainResult = milestoneAmounts.length
+            ? await postJobWithMilestonesOnChain(
+                jobTitle,
+                description,
+                milestoneAmounts,
+              )
+            : await postJobOnChain(jobTitle, description, totalBudget);
+          // Update database with blockchain ID
+          await fetch(`/api/jobs/${dbJob.id}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              blockchainId: blockchainResult.jobId,
+            }),
+          });
+          alert(
+            `Job posted successfully! Job ID: ${dbJob.id} (Blockchain ID: ${blockchainResult.jobId})`,
+          );
+        } catch (blockchainError) {
+          console.error("Blockchain posting failed:", blockchainError);
+          alert(
+            `Job created in database (ID: ${dbJob.id}) but blockchain posting failed. You can retry later.`,
+          );
+        }
+      } else {
+        alert(`Job posted successfully! Job ID: ${dbJob.id}`);
+      }
+
+      // Reset form
       setJobTitle("");
       setDescription("");
       setBudget("");
+      setMilestones("");
     } catch (err) {
       console.error(err);
-      alert("Failed to post job; see console for details.");
+      alert(`Failed to post job: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -99,8 +163,24 @@ export default function PostJob() {
                 value={budget}
                 onChange={(e) => setBudget(e.target.value)}
                 className="w-full p-4 bg-gray-700 rounded-xl border border-gray-600 focus:border-blue-500 focus:outline-none transition-colors"
-                required
+                min="0"
+                step="0.01"
               />
+            </div>
+            <div>
+              <label className="block text-gray-300 mb-2 font-semibold">
+                Milestones (comma-separated USDC amounts)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., 200, 300, 500"
+                value={milestones}
+                onChange={(e) => setMilestones(e.target.value)}
+                className="w-full p-4 bg-gray-700 rounded-xl border border-gray-600 focus:border-blue-500 focus:outline-none transition-colors"
+              />
+              <p className="text-sm text-gray-400 mt-2">
+                If you provide milestones, the total budget is the sum.
+              </p>
             </div>
             <button
               type="submit"

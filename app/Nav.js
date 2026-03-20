@@ -57,6 +57,17 @@ export default function Nav() {
           >
             Dispute
           </Link>
+          <Link
+            href="/agent"
+            className={`px-4 py-2 rounded ${
+              pathname === "/agent"
+                ? "bg-indigo-600 text-white"
+                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+            }`}
+            aria-current={pathname === "/agent" ? "page" : undefined}
+          >
+            Agent
+          </Link>
         </div>
       </div>
     </nav>

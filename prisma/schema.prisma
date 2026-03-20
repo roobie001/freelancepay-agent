@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  address     String   @unique
+  name        String?
+  email       String?
+  role        String   // "client" or "freelancer"
+  agentId     Int?
+  agentUri    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  postedJobs    Job[]     @relation("PostedJobs")
+  assignedJobs  Job[]     @relation("AssignedFreelancer")
+  applications  Application[]
+  disputes      Dispute[]
+
+  @@map("users")
+}
+
+model Job {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  budget      Float
+  status      String   @default("open") // "open", "in_progress", "completed", "disputed"
+  blockchainId Int?    // ID on the blockchain
+  clientId    String
+  client      User     @relation("PostedJobs", fields: [clientId], references: [id])
+  freelancerId String?
+  freelancer  User?    @relation("AssignedFreelancer", fields: [freelancerId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  applications Application[]
+  disputes     Dispute[]
+  milestones   Milestone[]
+
+  @@map("jobs")
+}
+
+model Milestone {
+  id        String   @id @default(cuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  index     Int
+  amount    Float
+  status    String   @default("pending") // "pending", "submitted", "approved", "paid", "disputed"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([jobId, index])
+  @@map("milestones")
+}
+
+model Application {
+  id           String   @id @default(cuid())
+  jobId        String
+  job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  freelancerId String
+  freelancer   User     @relation(fields: [freelancerId], references: [id])
+  proposal     String
+  proposedRate Float?
+  status       String   @default("pending") // "pending", "accepted", "rejected"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([jobId, freelancerId])
+  @@map("applications")
+}
+
+model Dispute {
+  id          String   @id @default(cuid())
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  initiatedBy String
+  initiator   User     @relation(fields: [initiatedBy], references: [id])
+  reason      String
+  aiDecision  String?  // AI agent's decision
+  resolved    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("disputes")
+}

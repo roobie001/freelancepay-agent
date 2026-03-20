@@ -1,0 +1,113 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "AgentReputationRegistry",
+  "sourceName": "contracts/AgentReputationRegistry.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "agentId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "rater",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "int8",
+          "name": "rating",
+          "type": "int8"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "metadataURI",
+          "type": "string"
+        }
+      ],
+      "name": "ReputationSubmitted",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "agentId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getReputation",
+      "outputs": [
+        {
+          "internalType": "int256",
+          "name": "score",
+          "type": "int256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "count",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "reputationByAgent",
+      "outputs": [
+        {
+          "internalType": "int256",
+          "name": "score",
+          "type": "int256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "count",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "agentId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "int8",
+          "name": "rating",
+          "type": "int8"
+        },
+        {
+          "internalType": "string",
+          "name": "metadataURI",
+          "type": "string"
+        }
+      ],
+      "name": "submitReputation",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080806040523461001657610250908161001c8239f35b600080fdfe608060408181526004908136101561001657600080fd5b600092833560e01c9081634acdbf12146101e55750806389370d8b146101b45763a00121ff1461004557600080fd5b346101b05760603660031901126101b057813590602480359182860b8093036101ac576044359067ffffffffffffffff958683116101a857366023840112156101a857828101359687116101a857368488850101116101a8576004198512158061019d575b1561016657858852876020528188208054868101908a888312911290801582169115161761015457906001918155018054916001830180931161014257505580519384526020840181905283018590527fdbbb56ec55d3de668ac3e15b6401a12be81f356824c05282e96fd690fbb9070e9291859101606083013784606085830101526060813395601f80199101168101030190a380f35b634e487b7160e01b8a52601190528489fd5b634e487b7160e01b8a5260118352858afd5b6013846020606494519362461bcd60e51b855284015282015272526174696e67206f7574206f662072616e676560681b6044820152fd5b5060058513156100aa565b8780fd5b8580fd5b8280fd5b5090346101b05760203660031901126101b05791819235815280602052206001815491015482519182526020820152f35b9050838334610216576020366003190112610216579083913581528060205220600181549101549082526020820152f35b5080fdfea264697066735822122042e465dd085e78278f65e440fbd311f5ebbba1b7e85b3ad3ad516048825860f264736f6c63430008140033",
+  "deployedBytecode": "0x608060408181526004908136101561001657600080fd5b600092833560e01c9081634acdbf12146101e55750806389370d8b146101b45763a00121ff1461004557600080fd5b346101b05760603660031901126101b057813590602480359182860b8093036101ac576044359067ffffffffffffffff958683116101a857366023840112156101a857828101359687116101a857368488850101116101a8576004198512158061019d575b1561016657858852876020528188208054868101908a888312911290801582169115161761015457906001918155018054916001830180931161014257505580519384526020840181905283018590527fdbbb56ec55d3de668ac3e15b6401a12be81f356824c05282e96fd690fbb9070e9291859101606083013784606085830101526060813395601f80199101168101030190a380f35b634e487b7160e01b8a52601190528489fd5b634e487b7160e01b8a5260118352858afd5b6013846020606494519362461bcd60e51b855284015282015272526174696e67206f7574206f662072616e676560681b6044820152fd5b5060058513156100aa565b8780fd5b8580fd5b8280fd5b5090346101b05760203660031901126101b05791819235815280602052206001815491015482519182526020820152f35b9050838334610216576020366003190112610216579083913581528060205220600181549101549082526020820152f35b5080fdfea264697066735822122042e465dd085e78278f65e440fbd311f5ebbba1b7e85b3ad3ad516048825860f264736f6c63430008140033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
