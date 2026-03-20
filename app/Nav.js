@@ -13,38 +13,49 @@ export default function Nav() {
           FreelancePay Agent
         </Link>
         <div className="flex gap-4">
-          <Link href="/post-job">
-            <button
-              className={`px-4 py-2 rounded ${
-                pathname === "/post-job"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
-            >
-              Post Job
-            </button>
+          <Link
+            href="/post-job"
+            className={`px-4 py-2 rounded ${
+              pathname === "/post-job"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+            }`}
+            aria-current={pathname === "/post-job" ? "page" : undefined}
+          >
+            Post Job
           </Link>
-          <Link href="/browse-jobs">
-            <button
-              className={`px-4 py-2 rounded ${
-                pathname === "/browse-jobs"
-                  ? "bg-green-600 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
-            >
-              Browse Jobs
-            </button>
+          <Link
+            href="/client"
+            className={`px-4 py-2 rounded ${
+              pathname === "/client"
+                ? "bg-purple-600 text-white"
+                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+            }`}
+            aria-current={pathname === "/client" ? "page" : undefined}
+          >
+            My Jobs
           </Link>
-          <Link href="/dispute">
-            <button
-              className={`px-4 py-2 rounded ${
-                pathname === "/dispute"
-                  ? "bg-yellow-600 text-black"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
-            >
-              Dispute
-            </button>
+          <Link
+            href="/browse-jobs"
+            className={`px-4 py-2 rounded ${
+              pathname === "/browse-jobs"
+                ? "bg-green-600 text-white"
+                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+            }`}
+            aria-current={pathname === "/browse-jobs" ? "page" : undefined}
+          >
+            Browse Jobs
+          </Link>
+          <Link
+            href="/dispute"
+            className={`px-4 py-2 rounded ${
+              pathname === "/dispute"
+                ? "bg-yellow-600 text-black"
+                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+            }`}
+            aria-current={pathname === "/dispute" ? "page" : undefined}
+          >
+            Dispute
           </Link>
         </div>
       </div>

@@ -8,6 +8,7 @@ import Nav from "../Nav";
 export default function BrowseJobs() {
   const account = useActiveAccount();
   const [jobs, setJobs] = useState([]);
+  const [acceptedJobs, setAcceptedJobs] = useState(new Set());
 
   useEffect(() => {
     async function loadJobs() {
@@ -54,6 +55,40 @@ export default function BrowseJobs() {
     loadJobs();
   }, []);
 
+  const handleAccept = async (jobId) => {
+    if (process.env.NEXT_PUBLIC_FREELANCEPAY_ADDRESS) {
+      try {
+        await import("../../lib/contract").then((m) =>
+          m.acceptJobOnChain(jobId),
+        );
+        alert("Job accepted on-chain!");
+        setAcceptedJobs((prev) => new Set([...prev, jobId]));
+      } catch (e) {
+        console.error(e);
+        alert("Failed to accept job");
+      }
+    } else {
+      alert("(Mock) Job accepted");
+      setAcceptedJobs((prev) => new Set([...prev, jobId]));
+    }
+  };
+
+  const handleSubmit = async (jobId) => {
+    if (process.env.NEXT_PUBLIC_FREELANCEPAY_ADDRESS) {
+      try {
+        await import("../../lib/contract").then((m) =>
+          m.submitWorkOnChain(jobId),
+        );
+        alert("Work submitted on-chain!");
+      } catch (e) {
+        console.error(e);
+        alert("Failed to submit work");
+      }
+    } else {
+      alert("(Mock) Work submitted");
+    }
+  };
+
   return (
     <>
       <Nav />
@@ -77,26 +112,21 @@ export default function BrowseJobs() {
                 <p className="text-yellow-400 font-semibold mb-4">
                   Budget: {job.budget} USDC
                 </p>
-                <button
-                  className="bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 px-6 py-3 rounded-xl text-white font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
-                  onClick={async () => {
-                    if (process.env.NEXT_PUBLIC_FREELANCEPAY_ADDRESS) {
-                      try {
-                        await import("../../lib/contract").then((m) =>
-                          m.acceptJobOnChain(job.id),
-                        );
-                        alert("Job accepted on-chain!");
-                      } catch (e) {
-                        console.error(e);
-                        alert("Failed to accept job");
-                      }
-                    } else {
-                      alert("(Mock) Job accepted");
-                    }
-                  }}
-                >
-                  Apply for Job
-                </button>
+                {acceptedJobs.has(job.id) ? (
+                  <button
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 px-6 py-3 rounded-xl text-white font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
+                    onClick={() => handleSubmit(job.id)}
+                  >
+                    Submit Work
+                  </button>
+                ) : (
+                  <button
+                    className="bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 px-6 py-3 rounded-xl text-white font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
+                    onClick={() => handleAccept(job.id)}
+                  >
+                    Apply for Job
+                  </button>
+                )}
               </div>
             ))}
           </div>

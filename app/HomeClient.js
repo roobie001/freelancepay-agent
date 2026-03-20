@@ -26,6 +26,11 @@ export default function Home() {
                   Post a Job (Client)
                 </button>
               </Link>
+              <Link href="/client">
+                <button className="bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 px-8 py-4 rounded-xl text-white font-semibold shadow-lg transform hover:scale-105 transition-all duration-200">
+                  My Posted Jobs
+                </button>
+              </Link>
               <Link href="/browse-jobs">
                 <button className="bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 px-8 py-4 rounded-xl text-white font-semibold shadow-lg transform hover:scale-105 transition-all duration-200">
                   Browse Jobs (Freelancer)
