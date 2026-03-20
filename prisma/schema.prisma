@@ -27,6 +27,7 @@ model User {
   assignedJobs  Job[]     @relation("AssignedFreelancer")
   applications  Application[]
   disputes      Dispute[]
+  evidence      Evidence[]
 
   @@map("users")
 }
@@ -92,8 +93,40 @@ model Dispute {
   reason      String
   aiDecision  String?  // AI agent's decision
   resolved    Boolean  @default(false)
+  status      String   @default("open") // "open", "resolved", "appealed"
+  resolvedAt  DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  evidence    Evidence[]
+  appeals     Appeal[]
+
   @@map("disputes")
+}
+
+model Evidence {
+  id         String   @id @default(cuid())
+  disputeId  String
+  dispute    Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  submittedBy String
+  submitter  User     @relation(fields: [submittedBy], references: [id])
+  role       String   // "client" or "freelancer"
+  uri        String
+  description String?
+  createdAt  DateTime @default(now())
+
+  @@map("evidence")
+}
+
+model Appeal {
+  id         String   @id @default(cuid())
+  disputeId  String
+  dispute    Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  reason     String
+  status     String   @default("pending") // "pending", "approved", "rejected"
+  resolvedAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("appeals")
 }

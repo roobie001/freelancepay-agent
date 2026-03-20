@@ -2,13 +2,18 @@
 
 import { useState } from "react";
 import { useActiveAccount } from "thirdweb/react";
-import { resolveJobDispute } from "../../lib/disputeResolver";
 import Nav from "../Nav";
 
 export default function DisputePage() {
   const account = useActiveAccount();
   const [jobId, setJobId] = useState("");
   const [submission, setSubmission] = useState("");
+  const [disputeReason, setDisputeReason] = useState("");
+  const [evidenceUri, setEvidenceUri] = useState("");
+  const [evidenceDesc, setEvidenceDesc] = useState("");
+  const [evidenceRole, setEvidenceRole] = useState("freelancer");
+  const [appealReason, setAppealReason] = useState("");
+  const [disputeId, setDisputeId] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -25,6 +30,95 @@ export default function DisputePage() {
     );
   }
 
+  const handleCreateDispute = async () => {
+    if (!jobId || !disputeReason) {
+      alert("Please enter a job ID and dispute reason.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch("/api/disputes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobId,
+          initiatedBy: account.address,
+          reason: disputeReason,
+        }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.detail || error.error || "Failed to create dispute");
+      }
+      const dispute = await res.json();
+      setDisputeId(dispute.id);
+      alert(`Dispute created: ${dispute.id}`);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to create dispute");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddEvidence = async () => {
+    if (!disputeId || !evidenceUri) {
+      alert("Please create a dispute and provide evidence URI.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/disputes/${disputeId}/evidence`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          submittedBy: account.address,
+          role: evidenceRole,
+          uri: evidenceUri,
+          description: evidenceDesc || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.detail || error.error || "Failed to add evidence");
+      }
+      alert("Evidence submitted");
+      setEvidenceUri("");
+      setEvidenceDesc("");
+    } catch (e) {
+      console.error(e);
+      alert("Failed to add evidence");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAppeal = async () => {
+    if (!disputeId || !appealReason) {
+      alert("Please enter an appeal reason.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/disputes/${disputeId}/appeal`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: appealReason }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.detail || error.error || "Failed to appeal");
+      }
+      alert("Appeal submitted");
+      setAppealReason("");
+    } catch (e) {
+      console.error(e);
+      alert("Failed to submit appeal");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleResolve = async () => {
     setLoading(true);
     try {
@@ -38,11 +132,20 @@ export default function DisputePage() {
         console.warn("Failed to fetch job details, using empty description.");
       }
 
-      const res = await resolveJobDispute(
-        jobId,
-        jobData,
-        submission,
-      );
+      const aiRes = await fetch("/api/ai-dispute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobId,
+          jobData,
+          submissionData: submission,
+        }),
+      });
+      if (!aiRes.ok) {
+        const err = await aiRes.json();
+        throw new Error(err.detail || err.error || "AI dispute failed");
+      }
+      const res = await aiRes.json();
       setResult(res);
       if (process.env.NEXT_PUBLIC_FREELANCEPAY_ADDRESS) {
         const { resolveDisputeOnChain } = await import("../../lib/contract");
@@ -68,6 +171,18 @@ export default function DisputePage() {
           const rating = res.approved ? 0 : 1;
           await submitReputationOnChain(clientId, rating, metadata);
         }
+      }
+
+      if (disputeId) {
+        await fetch(`/api/disputes/${disputeId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            aiDecision: res.reasoning,
+            resolved: true,
+            status: "resolved",
+          }),
+        });
       }
     } catch (e) {
       console.error(e);
@@ -100,6 +215,63 @@ export default function DisputePage() {
             </div>
             <div>
               <label className="block text-gray-300 mb-2 font-semibold">
+                Dispute Reason
+              </label>
+              <textarea
+                placeholder="Why is this in dispute?"
+                value={disputeReason}
+                onChange={(e) => setDisputeReason(e.target.value)}
+                className="w-full p-4 bg-gray-700 rounded-xl border border-gray-600 focus:border-yellow-500 focus:outline-none transition-colors h-24 resize-none"
+              />
+              <button
+                onClick={handleCreateDispute}
+                disabled={loading}
+                className="mt-3 w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-500 disabled:to-gray-600 px-6 py-3 rounded-xl text-white font-semibold shadow-lg transform hover:scale-105 transition-all duration-200 disabled:transform-none disabled:cursor-not-allowed"
+              >
+                {loading ? "Creating..." : "Create Dispute"}
+              </button>
+              {disputeId && (
+                <p className="text-sm text-green-400 mt-2">
+                  Dispute ID: {disputeId}
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="block text-gray-300 mb-2 font-semibold">
+                Evidence URI
+              </label>
+              <input
+                type="text"
+                placeholder="ipfs://... or https://..."
+                value={evidenceUri}
+                onChange={(e) => setEvidenceUri(e.target.value)}
+                className="w-full p-4 bg-gray-700 rounded-xl border border-gray-600 focus:border-yellow-500 focus:outline-none transition-colors"
+              />
+              <select
+                value={evidenceRole}
+                onChange={(e) => setEvidenceRole(e.target.value)}
+                className="mt-3 w-full p-4 bg-gray-700 rounded-xl border border-gray-600 focus:border-yellow-500 focus:outline-none transition-colors"
+              >
+                <option value="freelancer">Freelancer Evidence</option>
+                <option value="client">Client Evidence</option>
+              </select>
+              <input
+                type="text"
+                placeholder="Short description (optional)"
+                value={evidenceDesc}
+                onChange={(e) => setEvidenceDesc(e.target.value)}
+                className="mt-3 w-full p-4 bg-gray-700 rounded-xl border border-gray-600 focus:border-yellow-500 focus:outline-none transition-colors"
+              />
+              <button
+                onClick={handleAddEvidence}
+                disabled={loading}
+                className="mt-3 w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 disabled:from-gray-500 disabled:to-gray-600 px-6 py-3 rounded-xl text-white font-semibold shadow-lg transform hover:scale-105 transition-all duration-200 disabled:transform-none disabled:cursor-not-allowed"
+              >
+                {loading ? "Submitting..." : "Submit Evidence"}
+              </button>
+            </div>
+            <div>
+              <label className="block text-gray-300 mb-2 font-semibold">
                 Freelancer Submission
               </label>
               <textarea
@@ -116,6 +288,24 @@ export default function DisputePage() {
             >
               {loading ? "Analyzing with AI..." : "Run AI Agent"}
             </button>
+            <div>
+              <label className="block text-gray-300 mb-2 font-semibold">
+                Appeal Reason
+              </label>
+              <textarea
+                placeholder="Explain why this dispute should be appealed..."
+                value={appealReason}
+                onChange={(e) => setAppealReason(e.target.value)}
+                className="w-full p-4 bg-gray-700 rounded-xl border border-gray-600 focus:border-yellow-500 focus:outline-none transition-colors h-24 resize-none"
+              />
+              <button
+                onClick={handleAppeal}
+                disabled={loading}
+                className="mt-3 w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-gray-500 disabled:to-gray-600 px-6 py-3 rounded-xl text-white font-semibold shadow-lg transform hover:scale-105 transition-all duration-200 disabled:transform-none disabled:cursor-not-allowed"
+              >
+                {loading ? "Submitting..." : "Submit Appeal"}
+              </button>
+            </div>
             {result && (
               <div className="bg-gray-900 p-6 rounded-xl border-l-4 border-yellow-500">
                 <h3 className="text-xl font-semibold mb-4 text-yellow-400">

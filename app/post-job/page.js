@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ethers } from "ethers";
 import { useActiveAccount } from "thirdweb/react";
 import { postJobOnChain } from "../../lib/contract";
 import Nav from "../Nav";
@@ -70,9 +71,10 @@ export default function PostJob() {
       // Then try to post on blockchain if contract is configured
       if (process.env.NEXT_PUBLIC_FREELANCEPAY_ADDRESS) {
         try {
-          const { postJobWithMilestonesOnChain } = await import(
-            "../../lib/contract"
-          );
+          const { postJobWithMilestonesOnChain, ensureStablecoinAllowance } =
+            await import("../../lib/contract");
+          const totalUnits = ethers.parseUnits(totalBudget.toString(), 6);
+          await ensureStablecoinAllowance(totalUnits);
           const blockchainResult = milestoneAmounts.length
             ? await postJobWithMilestonesOnChain(
                 jobTitle,
@@ -95,8 +97,14 @@ export default function PostJob() {
           );
         } catch (blockchainError) {
           console.error("Blockchain posting failed:", blockchainError);
+          const message =
+            blockchainError?.shortMessage ||
+            blockchainError?.message ||
+            (typeof blockchainError === "string"
+              ? blockchainError
+              : JSON.stringify(blockchainError));
           alert(
-            `Job created in database (ID: ${dbJob.id}) but blockchain posting failed. You can retry later.`,
+            `Job created in database (ID: ${dbJob.id}) but blockchain posting failed: ${message}`,
           );
         }
       } else {
