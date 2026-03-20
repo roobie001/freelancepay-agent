@@ -76,6 +76,16 @@ model Application {
   freelancer   User     @relation(fields: [freelancerId], references: [id])
   proposal     String
   proposedRate Float?
+  coverLetter  String?
+  timelineDays Int?
+  bidAmount    Float?
+  deliverables String?
+  milestones   Json?
+  portfolioLink String?
+  agreedToTerms Boolean @default(false)
+  applicationHash String?
+  chainTxHash   String?
+  metadataUri   String?
   status       String   @default("pending") // "pending", "accepted", "rejected"
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -91,6 +101,8 @@ model Dispute {
   initiatedBy String
   initiator   User     @relation(fields: [initiatedBy], references: [id])
   reason      String
+  reasonType  String   @default("other") // "scope_not_met" | "late_delivery" | "poor_quality" | "payment_refusal" | "other"
+  reasonDetails String?
   aiDecision  String?  // AI agent's decision
   resolved    Boolean  @default(false)
   status      String   @default("open") // "open", "resolved", "appealed"
@@ -100,6 +112,7 @@ model Dispute {
 
   evidence    Evidence[]
   appeals     Appeal[]
+  decision    Decision?
 
   @@map("disputes")
 }
@@ -108,11 +121,15 @@ model Evidence {
   id         String   @id @default(cuid())
   disputeId  String
   dispute    Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  appealId   String?
+  appeal     Appeal?  @relation(fields: [appealId], references: [id], onDelete: Cascade)
   submittedBy String
   submitter  User     @relation(fields: [submittedBy], references: [id])
   role       String   // "client" or "freelancer"
+  type       String   // "screenshot" | "figma" | "live_url" | "chat_proof" | "github_repo" | "other"
   uri        String
   description String?
+  isAppeal   Boolean  @default(false)
   createdAt  DateTime @default(now())
 
   @@map("evidence")
@@ -127,6 +144,21 @@ model Appeal {
   resolvedAt DateTime?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  evidence   Evidence[]
 
   @@map("appeals")
+}
+
+model Decision {
+  id           String   @id @default(cuid())
+  disputeId    String   @unique
+  dispute      Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  decision     String   // "client" | "freelancer" | "partial"
+  confidence   Float
+  reasoning    String
+  paymentSplit Json
+  isAppeal     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@map("decisions")
 }

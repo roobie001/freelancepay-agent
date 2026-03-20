@@ -3,6 +3,7 @@
 import { useActiveAccount } from "thirdweb/react";
 import { useEffect, useState } from "react";
 import { acceptJobOnChain } from "../../lib/contract";
+import ApplyForJobModal from "../components/ApplyForJobModal";
 import Nav from "../Nav";
 
 export default function BrowseJobs() {
@@ -10,6 +11,8 @@ export default function BrowseJobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [acceptedJobs, setAcceptedJobs] = useState(new Set());
+  const [showModal, setShowModal] = useState(false);
+  const [activeJob, setActiveJob] = useState(null);
 
   useEffect(() => {
     async function loadJobs() {
@@ -60,37 +63,22 @@ export default function BrowseJobs() {
     loadJobs();
   }, []);
 
-  const handleApply = async (jobId) => {
+  const handleApply = async (jobId, job) => {
     if (!account?.address) {
       alert("Please connect your wallet first");
       return;
     }
 
     try {
-      // For now, just show application form
-      const proposal = prompt("Enter your proposal:");
-      if (!proposal) return;
-
-      const response = await fetch('/api/applications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          jobId,
-          freelancerAddress: account.address,
-          proposal,
-        }),
-      });
-
-      if (response.ok) {
-        alert("Application submitted successfully!");
-        // Refresh jobs to show updated application count
-        window.location.reload();
-      } else {
-        const error = await response.json();
-        alert(`Failed to apply: ${error.error}`);
+      if (
+        job?.client?.address &&
+        job.client.address.toLowerCase() === account.address.toLowerCase()
+      ) {
+        alert("You cannot apply to a job you posted.");
+        return;
       }
+      setActiveJob(job || jobs.find((j) => j.id === jobId));
+      setShowModal(true);
     } catch (error) {
       console.error('Error applying to job:', error);
       alert("Failed to apply to job");
@@ -100,6 +88,15 @@ export default function BrowseJobs() {
   const handleAccept = async (jobId, blockchainId) => {
     if (process.env.NEXT_PUBLIC_FREELANCEPAY_ADDRESS) {
       try {
+        const job = jobs.find((j) => j.id === jobId);
+        if (
+          job?.client?.address &&
+          account?.address &&
+          job.client.address.toLowerCase() === account.address.toLowerCase()
+        ) {
+          alert("You cannot accept your own job.");
+          return;
+        }
         const idToUse = typeof blockchainId === "number" ? blockchainId : jobId;
         await acceptJobOnChain(idToUse);
         alert("Job accepted on-chain!");
@@ -128,6 +125,11 @@ export default function BrowseJobs() {
     } else {
       alert("(Mock) Work submitted");
     }
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setActiveJob(null);
   };
 
   if (loading) {
@@ -196,7 +198,7 @@ export default function BrowseJobs() {
                   ) : (
                     <button
                       className="bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 px-6 py-3 rounded-xl text-white font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
-                      onClick={() => handleApply(job.id)}
+                      onClick={() => handleApply(job.id, job)}
                     >
                       Apply for Job
                     </button>
@@ -216,6 +218,12 @@ export default function BrowseJobs() {
           )}
         </div>
       </main>
+      <ApplyForJobModal
+        isOpen={showModal}
+        onClose={closeModal}
+        job={activeJob}
+        walletAddress={account?.address || ""}
+      />
     </>
   );
 }

@@ -4,7 +4,8 @@ import { NextResponse } from "next/server";
 export async function POST(request, { params }) {
   try {
     const { id } = params;
-    const { submittedBy, role, uri, description } = await request.json();
+    const { submittedBy, role, uri, description, type, isAppeal, appealId } =
+      await request.json();
 
     if (!submittedBy || !role || !uri) {
       return NextResponse.json(
@@ -16,10 +17,13 @@ export async function POST(request, { params }) {
     const evidence = await prisma.evidence.create({
       data: {
         disputeId: id,
+        appealId: appealId || null,
         submittedBy,
         role,
+        type: type || "other",
         uri,
         description,
+        isAppeal: !!isAppeal,
       },
     });
 

@@ -27,7 +27,8 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const { jobId, initiatedBy, reason } = await request.json();
+    const { jobId, initiatedBy, reason, reasonType, reasonDetails, evidence } =
+      await request.json();
     if (!jobId || !initiatedBy || !reason) {
       return NextResponse.json(
         { error: "jobId, initiatedBy, and reason are required" },
@@ -40,6 +41,19 @@ export async function POST(request) {
         jobId,
         initiatedBy,
         reason,
+        reasonType: reasonType || "other",
+        reasonDetails: reasonDetails || undefined,
+        evidence: evidence?.length
+          ? {
+              create: evidence.map((item) => ({
+                submittedBy: item.submittedBy,
+                role: item.role,
+                type: item.type || "other",
+                uri: item.uri,
+                description: item.description || undefined,
+              })),
+            }
+          : undefined,
       },
       include: { evidence: true, appeals: true },
     });

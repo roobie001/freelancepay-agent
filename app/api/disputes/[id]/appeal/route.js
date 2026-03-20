@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function POST(request, { params }) {
   try {
     const { id } = params;
-    const { reason } = await request.json();
+    const { reason, evidence } = await request.json();
     if (!reason) {
       return NextResponse.json(
         { error: "reason is required" },
@@ -18,6 +18,21 @@ export async function POST(request, { params }) {
         reason,
       },
     });
+
+    if (evidence?.length) {
+      await prisma.evidence.createMany({
+        data: evidence.map((item) => ({
+          disputeId: id,
+          appealId: appeal.id,
+          submittedBy: item.submittedBy,
+          role: item.role,
+          type: item.type || "other",
+          uri: item.uri,
+          description: item.description || undefined,
+          isAppeal: true,
+        })),
+      });
+    }
 
     const updated = await prisma.dispute.update({
       where: { id },

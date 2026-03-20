@@ -38,6 +38,15 @@ async function main() {
   const reputationRegistryAddress = await reputationRegistry.getAddress();
   console.log("AgentReputationRegistry deployed to:", reputationRegistryAddress);
 
+  console.log("Deploying ApplicationRegistry...");
+  const ApplicationRegistry = await hre.ethers.getContractFactory(
+    "ApplicationRegistry",
+  );
+  const applicationRegistry = await ApplicationRegistry.deploy();
+  await applicationRegistry.waitForDeployment();
+  const applicationRegistryAddress = await applicationRegistry.getAddress();
+  console.log("ApplicationRegistry deployed to:", applicationRegistryAddress);
+
   // Save deployment info
   const deploymentInfo = {
     network: hre.network.name,
@@ -46,6 +55,7 @@ async function main() {
     aiAgentAddress: AI_AGENT_ADDRESS,
     identityRegistryAddress,
     reputationRegistryAddress,
+    applicationRegistryAddress,
     deploymentBlock: await hre.ethers.provider.getBlockNumber(),
     timestamp: new Date().toISOString(),
   };
@@ -62,6 +72,7 @@ async function main() {
   console.log(`NEXT_PUBLIC_CELO_NETWORK=celo-sepolia`);
   console.log(`NEXT_PUBLIC_IDENTITY_REGISTRY=${identityRegistryAddress}`);
   console.log(`NEXT_PUBLIC_REPUTATION_REGISTRY=${reputationRegistryAddress}`);
+  console.log(`NEXT_PUBLIC_APPLICATION_REGISTRY=${applicationRegistryAddress}`);
 }
 
 main()

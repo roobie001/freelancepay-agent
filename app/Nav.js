@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ConnectButton } from "thirdweb/react";
+import { client } from "../lib/thirdweb";
 
 export default function Nav() {
   const pathname = usePathname();
@@ -68,6 +70,12 @@ export default function Nav() {
           >
             Agent
           </Link>
+        </div>
+        <div className="ml-4">
+          <ConnectButton
+            client={client}
+            className="bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 px-4 py-2 rounded-lg text-white text-sm font-semibold"
+          />
         </div>
       </div>
     </nav>

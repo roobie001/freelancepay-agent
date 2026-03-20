@@ -10,38 +10,19 @@ export default function ClientDashboard() {
 
   useEffect(() => {
     async function loadJobs() {
-      if (process.env.NEXT_PUBLIC_FREELANCEPAY_ADDRESS) {
-        // Load from contract
-        try {
-          const contract = await import("../../lib/contract");
-          const jobIds = await contract.getClientJobsOnChain(account?.address);
-          const jobDetails = await Promise.all(
-            jobIds.map(async (id) => {
-              const job = await contract.getJobOnChain(id);
-              const count = await contract.getMilestoneCountOnChain(id);
-              const milestones = await Promise.all(
-                Array.from({ length: count }, (_, idx) =>
-                  contract.getMilestoneOnChain(id, idx),
-                ),
-              );
-              return { ...job, id, milestones };
-            }),
-          );
-          setJobs(jobDetails);
-        } catch (e) {
-          console.error(e);
+      if (!account?.address) return;
+      try {
+        const res = await fetch(
+          `/api/client/jobs?address=${account.address}`,
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setJobs(data);
+        } else {
+          console.error("Failed to fetch client jobs");
         }
-      } else {
-        // Mock jobs
-        setJobs([
-          {
-            id: 1,
-            title: "Build a website",
-            description: "Need a React site",
-            budget: 500,
-            status: 0, // OPEN
-          },
-        ]);
+      } catch (e) {
+        console.error(e);
       }
     }
     if (account) loadJobs();
@@ -61,6 +42,7 @@ export default function ClientDashboard() {
   }
 
   const getStatusText = (status) => {
+    if (typeof status === "string") return status.toUpperCase();
     const statuses = [
       "OPEN",
       "IN_PROGRESS",
@@ -92,6 +74,35 @@ export default function ClientDashboard() {
     } catch (e) {
       console.error(e);
       alert("Failed to approve milestone");
+    }
+  };
+
+  const handleAcceptApplication = async (applicationId, blockchainId) => {
+    try {
+      const res = await fetch(`/api/applications/${applicationId}/accept`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to accept application");
+      }
+
+      if (process.env.NEXT_PUBLIC_FREELANCEPAY_ADDRESS && blockchainId) {
+        const { acceptJobOnChain } = await import("../../lib/contract");
+        await acceptJobOnChain(blockchainId);
+      }
+
+      alert("Application accepted!");
+      // refresh
+      const refreshed = await fetch(
+        `/api/client/jobs?address=${account.address}`,
+      );
+      if (refreshed.ok) {
+        setJobs(await refreshed.json());
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to accept application");
     }
   };
 
@@ -149,14 +160,57 @@ export default function ClientDashboard() {
                             Milestone {idx + 1}: {m.amount} USDC
                           </span>
                           <span>
-                            {m.released
-                              ? "paid"
-                              : m.submitted
-                              ? "submitted"
-                              : "pending"}
+                            {m.status || (m.released ? "paid" : m.submitted ? "submitted" : "pending")}
                           </span>
                         </div>
                       ))}
+                    </div>
+                  )}
+                  {job.applications && job.applications.length > 0 && (
+                    <div className="mt-4 border-t border-gray-700 pt-4">
+                      <p className="text-sm text-blue-300 mb-2 font-semibold">
+                        Applications ({job.applications.length})
+                      </p>
+                      <div className="space-y-3">
+                        {job.applications.map((app) => (
+                          <div
+                            key={app.id}
+                            className="rounded-xl border border-gray-700 bg-gray-900 p-3"
+                          >
+                            <p className="text-sm text-gray-300">
+                              Freelancer:{" "}
+                              {app.freelancer?.name ||
+                                `${app.freelancer?.address?.slice(0, 6)}...${app.freelancer?.address?.slice(-4)}`}
+                            </p>
+                            {app.coverLetter && (
+                              <p className="text-sm text-gray-400 mt-2">
+                                {app.coverLetter.slice(0, 140)}...
+                              </p>
+                            )}
+                            <div className="mt-2 text-xs text-gray-500 flex gap-3">
+                              {app.bidAmount && (
+                                <span>Bid: {app.bidAmount} USDC</span>
+                              )}
+                              {app.timelineDays && (
+                                <span>Timeline: {app.timelineDays} days</span>
+                              )}
+                            </div>
+                            {app.status === "pending" && (
+                              <button
+                                className="mt-3 w-full bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 px-4 py-2 rounded-lg text-white text-sm font-semibold"
+                                onClick={() =>
+                                  handleAcceptApplication(
+                                    app.id,
+                                    job.blockchainId,
+                                  )
+                                }
+                              >
+                                Accept Application
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                   {job.status === 4 && ( // DISPUTED

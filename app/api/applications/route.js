@@ -3,8 +3,21 @@ import { NextResponse } from "next/server";
 
 export async function POST(request) {
   try {
-    const { jobId, freelancerAddress, proposal, proposedRate } =
-      await request.json();
+    const {
+      jobId,
+      freelancerAddress,
+      proposal,
+      proposedRate,
+      coverLetter,
+      timeline,
+      bidAmount,
+      deliverables,
+      milestones,
+      portfolioLink,
+      agreedToTerms,
+      applicationHash,
+      metadataUri,
+    } = await request.json();
 
     // Find or create freelancer user
     let freelancer = await prisma.user.findUnique({
@@ -37,13 +50,33 @@ export async function POST(request) {
       );
     }
 
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      include: { client: true },
+    });
+    if (job?.client?.address?.toLowerCase() === freelancerAddress.toLowerCase()) {
+      return NextResponse.json(
+        { error: "You cannot apply to your own job" },
+        { status: 400 },
+      );
+    }
+
     // Create application
     const application = await prisma.application.create({
       data: {
         jobId,
         freelancerId: freelancer.id,
-        proposal,
+        proposal: coverLetter || proposal,
         proposedRate: proposedRate ? parseFloat(proposedRate) : null,
+        coverLetter: coverLetter || null,
+        timelineDays: timeline ? parseInt(timeline, 10) : null,
+        bidAmount: bidAmount ? parseFloat(bidAmount) : null,
+        deliverables: deliverables || null,
+        milestones: milestones || null,
+        portfolioLink: portfolioLink || null,
+        agreedToTerms: !!agreedToTerms,
+        applicationHash: applicationHash || null,
+        metadataUri: metadataUri || null,
       },
       include: {
         freelancer: {

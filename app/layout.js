@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThirdwebProvider } from "thirdweb/react";
+import { ToastProvider } from "./components/ToastProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,7 +20,11 @@ export const metadata = {
 
 function ClientProviders({ children }) {
   "use client";
-  return <ThirdwebProvider>{children}</ThirdwebProvider>;
+  return (
+    <ThirdwebProvider>
+      <ToastProvider>{children}</ToastProvider>
+    </ThirdwebProvider>
+  );
 }
 
 export default function RootLayout({ children }) {
