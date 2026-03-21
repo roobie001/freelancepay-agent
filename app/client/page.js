@@ -7,6 +7,8 @@ import Nav from "../Nav";
 export default function ClientDashboard() {
   const account = useActiveAccount();
   const [jobs, setJobs] = useState([]);
+  const [expandedAppId, setExpandedAppId] = useState(null);
+  const [acceptingId, setAcceptingId] = useState(null);
 
   useEffect(() => {
     async function loadJobs() {
@@ -77,19 +79,42 @@ export default function ClientDashboard() {
     }
   };
 
+  const handleMarkMilestonePaid = async (jobId, index) => {
+    try {
+      await fetch("/api/milestones/pay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId, index }),
+      });
+
+      const refreshed = await fetch(
+        `/api/client/jobs?address=${account.address}`,
+      );
+      if (refreshed.ok) {
+        setJobs(await refreshed.json());
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to mark milestone paid");
+    }
+  };
+
   const handleAcceptApplication = async (applicationId, blockchainId) => {
     try {
+      setAcceptingId(applicationId);
       const res = await fetch(`/api/applications/${applicationId}/accept`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientAddress: account.address }),
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Failed to accept application");
+        throw new Error(err.detail || err.error || "Failed to accept application");
       }
 
       if (process.env.NEXT_PUBLIC_FREELANCEPAY_ADDRESS && blockchainId) {
-        const { acceptJobOnChain } = await import("../../lib/contract");
-        await acceptJobOnChain(blockchainId);
+        const { acceptProposalOnChain } = await import("../../lib/contract");
+        await acceptProposalOnChain(blockchainId);
       }
 
       alert("Application accepted!");
@@ -103,6 +128,8 @@ export default function ClientDashboard() {
     } catch (e) {
       console.error(e);
       alert("Failed to accept application");
+    } finally {
+      setAcceptingId(null);
     }
   };
 
@@ -154,14 +181,31 @@ export default function ClientDashboard() {
                       {job.milestones.map((m, idx) => (
                         <div
                           key={`${job.id}-${idx}`}
-                          className="flex items-center justify-between border-b border-gray-700 py-1"
+                          className="flex items-center justify-between border-b border-gray-700 py-2"
                         >
                           <span>
                             Milestone {idx + 1}: {m.amount} USDC
                           </span>
-                          <span>
-                            {m.status || (m.released ? "paid" : m.submitted ? "submitted" : "pending")}
-                          </span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs text-gray-400">
+                              {m.status ||
+                                (m.released
+                                  ? "paid"
+                                  : m.submitted
+                                  ? "submitted"
+                                  : "pending")}
+                            </span>
+                            {m.status === "submitted" && (
+                              <button
+                                className="text-xs px-3 py-1 rounded-lg bg-green-500/20 text-green-300 hover:bg-green-500/30"
+                                onClick={() =>
+                                  handleMarkMilestonePaid(job.id, m.index)
+                                }
+                              >
+                                Mark Paid
+                              </button>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -177,6 +221,11 @@ export default function ClientDashboard() {
                             key={app.id}
                             className="rounded-xl border border-gray-700 bg-gray-900 p-3"
                           >
+                            {app.status === "accepted" && (
+                              <div className="mb-2 inline-block rounded-full bg-green-500/20 px-2 py-1 text-xs text-green-300">
+                                Accepted
+                              </div>
+                            )}
                             <p className="text-sm text-gray-300">
                               Freelancer:{" "}
                               {app.freelancer?.name ||
@@ -195,17 +244,93 @@ export default function ClientDashboard() {
                                 <span>Timeline: {app.timelineDays} days</span>
                               )}
                             </div>
+                            <button
+                              className="mt-3 w-full bg-gray-800 hover:bg-gray-700 text-gray-200 text-sm px-4 py-2 rounded-lg"
+                              onClick={() =>
+                                setExpandedAppId(
+                                  expandedAppId === app.id ? null : app.id,
+                                )
+                              }
+                            >
+                              {expandedAppId === app.id
+                                ? "Hide Details"
+                                : "View Proposal Details"}
+                            </button>
+                            {expandedAppId === app.id && (
+                              <div className="mt-3 text-sm text-gray-300 space-y-2">
+                                {app.coverLetter && (
+                                  <div>
+                                    <p className="text-xs text-gray-500 mb-1">
+                                      Cover Letter
+                                    </p>
+                                    <p className="text-gray-200 whitespace-pre-wrap">
+                                      {app.coverLetter}
+                                    </p>
+                                  </div>
+                                )}
+                                {app.deliverables && (
+                                  <div>
+                                    <p className="text-xs text-gray-500 mb-1">
+                                      Deliverables
+                                    </p>
+                                    <p className="text-gray-200 whitespace-pre-wrap">
+                                      {app.deliverables}
+                                    </p>
+                                  </div>
+                                )}
+                                {app.milestones && (
+                                  <div>
+                                    <p className="text-xs text-gray-500 mb-1">
+                                      Milestones
+                                    </p>
+                                    <div className="space-y-2">
+                                      {app.milestones.map((m, idx) => (
+                                        <div
+                                          key={`${app.id}-ms-${idx}`}
+                                          className="flex items-center justify-between rounded-lg bg-gray-800 px-3 py-2"
+                                        >
+                                          <span>
+                                            {m.title || `Milestone ${idx + 1}`}
+                                          </span>
+                                          <span className="text-gray-400">
+                                            {m.amount} USDC • {m.duration} days
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                {app.portfolioLink && (
+                                  <div>
+                                    <p className="text-xs text-gray-500 mb-1">
+                                      Portfolio
+                                    </p>
+                                    <a
+                                      href={app.portfolioLink}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-blue-400 underline"
+                                    >
+                                      {app.portfolioLink}
+                                    </a>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                             {app.status === "pending" && (
                               <button
-                                className="mt-3 w-full bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 px-4 py-2 rounded-lg text-white text-sm font-semibold"
+                                className="mt-3 w-full bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 px-4 py-2 rounded-lg text-white text-sm font-semibold disabled:from-gray-500 disabled:to-gray-600"
                                 onClick={() =>
                                   handleAcceptApplication(
                                     app.id,
                                     job.blockchainId,
                                   )
                                 }
+                                disabled={acceptingId === app.id}
                               >
-                                Accept Application
+                                {acceptingId === app.id
+                                  ? "Accepting..."
+                                  : "Accept Proposal"}
                               </button>
                             )}
                           </div>

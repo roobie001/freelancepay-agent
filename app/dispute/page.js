@@ -389,6 +389,33 @@ export default function DisputePage() {
                   ))}
                 </select>
               </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  className="text-xs text-gray-300"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    try {
+                      const data = new FormData();
+                      data.append("file", file);
+                      const res = await fetch("/api/upload", {
+                        method: "POST",
+                        body: data,
+                      });
+                      const json = await res.json();
+                      if (res.ok) {
+                        setEvidenceUri(json.ipfs || json.gateway);
+                      } else {
+                        alert(json.error || "Upload failed");
+                      }
+                    } catch (err) {
+                      console.error(err);
+                      alert("Upload failed");
+                    }
+                  }}
+                />
+              </div>
               <input
                 type="text"
                 placeholder="Evidence link"

@@ -1,7 +1,7 @@
 "use client";
 
-import { ConnectButton, useActiveAccount } from "thirdweb/react";
-import { client } from "../lib/thirdweb";
+import { useActiveAccount } from "thirdweb/react";
+import WalletButton from "./components/WalletButton";
 import Link from "next/link";
 import Nav from "./Nav";
 
@@ -59,10 +59,7 @@ export default function Home() {
           resolution.
         </p>
       </div>
-      <ConnectButton
-        client={client}
-        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 px-8 py-4 rounded-xl text-white font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
-      />
+      <WalletButton />
     </main>
   );
 }

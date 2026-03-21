@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ConnectButton } from "thirdweb/react";
-import { client } from "../lib/thirdweb";
+import WalletButton from "./components/WalletButton";
+import NotificationsMenu from "./components/NotificationsMenu";
 
 export default function Nav() {
   const pathname = usePathname();
@@ -49,6 +49,17 @@ export default function Nav() {
             Browse Jobs
           </Link>
           <Link
+            href="/freelancer"
+            className={`px-4 py-2 rounded ${
+              pathname === "/freelancer"
+                ? "bg-teal-600 text-white"
+                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+            }`}
+            aria-current={pathname === "/freelancer" ? "page" : undefined}
+          >
+            Freelancer
+          </Link>
+          <Link
             href="/dispute"
             className={`px-4 py-2 rounded ${
               pathname === "/dispute"
@@ -72,10 +83,10 @@ export default function Nav() {
           </Link>
         </div>
         <div className="ml-4">
-          <ConnectButton
-            client={client}
-            className="bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 px-4 py-2 rounded-lg text-white text-sm font-semibold"
-          />
+          <NotificationsMenu />
+        </div>
+        <div className="ml-4">
+          <WalletButton compact />
         </div>
       </div>
     </nav>

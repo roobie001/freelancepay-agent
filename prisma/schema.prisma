@@ -28,6 +28,10 @@ model User {
   applications  Application[]
   disputes      Dispute[]
   evidence      Evidence[]
+  clientAgreements Agreement[] @relation("ClientAgreements")
+  freelancerAgreements Agreement[] @relation("FreelancerAgreements")
+  submissions  Submission[]
+  notifications Notification[]
 
   @@map("users")
 }
@@ -50,6 +54,8 @@ model Job {
   applications Application[]
   disputes     Dispute[]
   milestones   Milestone[]
+  agreement    Agreement?
+  submissions  Submission[]
 
   @@map("jobs")
 }
@@ -66,6 +72,19 @@ model Milestone {
 
   @@unique([jobId, index])
   @@map("milestones")
+}
+
+model Submission {
+  id          String   @id @default(cuid())
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  freelancerId String
+  freelancer  User     @relation(fields: [freelancerId], references: [id])
+  uri         String
+  description String?
+  createdAt   DateTime @default(now())
+
+  @@map("submissions")
 }
 
 model Application {
@@ -89,6 +108,7 @@ model Application {
   status       String   @default("pending") // "pending", "accepted", "rejected"
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  agreement    Agreement?
 
   @@unique([jobId, freelancerId])
   @@map("applications")
@@ -115,6 +135,27 @@ model Dispute {
   decision    Decision?
 
   @@map("disputes")
+}
+
+model Agreement {
+  id             String   @id @default(cuid())
+  jobId          String   @unique
+  job            Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  applicationId  String   @unique
+  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  clientId       String
+  client         User     @relation("ClientAgreements", fields: [clientId], references: [id])
+  freelancerId   String
+  freelancer     User     @relation("FreelancerAgreements", fields: [freelancerId], references: [id])
+  agreedAmount   Float
+  milestones     Json?
+  deliverables   String?
+  deadlineDays   Int?
+  status         String   @default("active") // "active", "completed", "disputed", "terminated"
+  contractJson   Json
+  createdAt      DateTime @default(now())
+
+  @@map("agreements")
 }
 
 model Evidence {
@@ -161,4 +202,18 @@ model Decision {
   createdAt    DateTime @default(now())
 
   @@map("decisions")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  message   String
+  data      Json?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
 }
