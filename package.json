@@ -20,6 +20,8 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@noble/ed25519": "^3.0.1",
+    "@noble/hashes": "^2.0.1",
     "@prisma/client": "^5.0.0",
     "ethers": "^6.16.0",
     "next": "16.1.6",
