@@ -1,4 +1,5 @@
 import { prisma } from "../../../lib/prisma";
+import { safeCreateTimelineEvent } from "../../../lib/timeline";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -96,6 +97,12 @@ export async function POST(request) {
         },
         milestones: true,
       },
+    });
+
+    await safeCreateTimelineEvent({
+      jobId: job.id,
+      type: "job_created",
+      metadata: { clientId: user.id, budget: job.budget },
     });
 
     return NextResponse.json(job);

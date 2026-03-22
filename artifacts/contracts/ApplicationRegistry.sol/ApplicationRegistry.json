@@ -1,0 +1,65 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ApplicationRegistry",
+  "sourceName": "contracts/ApplicationRegistry.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "jobId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "freelancer",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "applicationHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "metadataURI",
+          "type": "string"
+        }
+      ],
+      "name": "ApplicationSubmitted",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "jobId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "applicationHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "string",
+          "name": "metadataURI",
+          "type": "string"
+        }
+      ],
+      "name": "submitApplication",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080806040523461001657610104908161001c8239f35b600080fdfe6080806040526004361015601257600080fd5b600090813560e01c632495a9f814602857600080fd5b3460ca57606036600319011260ca5767ffffffffffffffff60443581811160c6573660238201121560c657806004013591821160c657366024838301011160c65760248291813585526040602086015282604086015201606084013782606082840101527fe4085a16175b00804b920c84edbccce822f358b929d83df3dcf254e158c8db69339260608160043594601f80199101168101030190a380f35b8380fd5b5080fdfea264697066735822122081f537bed510acd2c26b0e38b82bb1e6d6ed5445b8fb2d8c176d3ba73283fdaa64736f6c63430008140033",
+  "deployedBytecode": "0x6080806040526004361015601257600080fd5b600090813560e01c632495a9f814602857600080fd5b3460ca57606036600319011260ca5767ffffffffffffffff60443581811160c6573660238201121560c657806004013591821160c657366024838301011160c65760248291813585526040602086015282604086015201606084013782606082840101527fe4085a16175b00804b920c84edbccce822f358b929d83df3dcf254e158c8db69339260608160043594601f80199101168101030190a380f35b8380fd5b5080fdfea264697066735822122081f537bed510acd2c26b0e38b82bb1e6d6ed5445b8fb2d8c176d3ba73283fdaa64736f6c63430008140033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

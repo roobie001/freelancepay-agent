@@ -1,4 +1,5 @@
 import { prisma } from "../../../lib/prisma";
+import { safeCreateTimelineEvent } from "../../../lib/timeline";
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
@@ -87,9 +88,11 @@ export async function POST(request) {
         },
         job: {
           select: {
+            id: true,
             title: true,
             client: {
               select: {
+                id: true,
                 name: true,
                 address: true,
               },
@@ -98,6 +101,29 @@ export async function POST(request) {
         },
       },
     });
+
+    await safeCreateTimelineEvent({
+      jobId: application.job.id,
+      agreementId: null,
+      type: "proposal_submitted",
+      metadata: {
+        applicationId: application.id,
+        freelancerId: freelancer.id,
+        bidAmount: application.bidAmount,
+      },
+    });
+
+    if (application.job?.client?.id) {
+      await prisma.notification.create({
+        data: {
+          userId: application.job.client.id,
+          type: "proposal_submitted",
+          title: "New proposal received",
+          message: `A freelancer submitted a proposal for "${application.job.title}".`,
+          data: { jobId, applicationId: application.id },
+        },
+      });
+    }
 
     return NextResponse.json(application);
   } catch (error) {

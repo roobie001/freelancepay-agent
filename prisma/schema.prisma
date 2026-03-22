@@ -56,6 +56,7 @@ model Job {
   milestones   Milestone[]
   agreement    Agreement?
   submissions  Submission[]
+  timelineEvents TimelineEvent[]
 
   @@map("jobs")
 }
@@ -118,6 +119,8 @@ model Dispute {
   id          String   @id @default(cuid())
   jobId       String
   job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  agreementId String?
+  agreement   Agreement? @relation(fields: [agreementId], references: [id], onDelete: SetNull)
   initiatedBy String
   initiator   User     @relation(fields: [initiatedBy], references: [id])
   reason      String
@@ -132,7 +135,8 @@ model Dispute {
 
   evidence    Evidence[]
   appeals     Appeal[]
-  decision    Decision?
+  decisions   Decision[]
+  timelineEvents TimelineEvent[]
 
   @@map("disputes")
 }
@@ -154,6 +158,8 @@ model Agreement {
   status         String   @default("active") // "active", "completed", "disputed", "terminated"
   contractJson   Json
   createdAt      DateTime @default(now())
+  disputes       Dispute[]
+  timelineEvents TimelineEvent[]
 
   @@map("agreements")
 }
@@ -186,22 +192,42 @@ model Appeal {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   evidence   Evidence[]
+  decisions  Decision[]
 
   @@map("appeals")
 }
 
 model Decision {
   id           String   @id @default(cuid())
-  disputeId    String   @unique
+  disputeId    String
   dispute      Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  appealId     String?
+  appeal       Appeal?  @relation(fields: [appealId], references: [id], onDelete: SetNull)
   decision     String   // "client" | "freelancer" | "partial"
   confidence   Float
   reasoning    String
   paymentSplit Json
+  txHash       String?
+  executedOnChain Boolean @default(false)
   isAppeal     Boolean  @default(false)
   createdAt    DateTime @default(now())
 
   @@map("decisions")
+}
+
+model TimelineEvent {
+  id          String   @id @default(cuid())
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  agreementId String?
+  agreement   Agreement? @relation(fields: [agreementId], references: [id], onDelete: SetNull)
+  disputeId   String?
+  dispute     Dispute? @relation(fields: [disputeId], references: [id], onDelete: SetNull)
+  type        String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@map("timeline_events")
 }
 
 model Notification {

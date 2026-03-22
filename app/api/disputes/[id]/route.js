@@ -6,7 +6,7 @@ export async function GET(request, { params }) {
     const { id } = params;
     const dispute = await prisma.dispute.findUnique({
       where: { id },
-      include: { evidence: true, appeals: true, decision: true },
+      include: { evidence: true, appeals: true, decisions: true, agreement: true },
     });
 
     if (!dispute) {
@@ -36,7 +36,7 @@ export async function PUT(request, { params }) {
         status: body.status || undefined,
         resolvedAt: body.resolved ? new Date() : undefined,
       },
-      include: { evidence: true, appeals: true, decision: true },
+      include: { evidence: true, appeals: true, decisions: true, agreement: true },
     });
 
     return NextResponse.json(updated);

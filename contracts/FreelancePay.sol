@@ -63,6 +63,11 @@ contract FreelancePay {
     event MilestoneSubmitted(uint256 indexed jobId, uint256 index);
     event MilestoneApproved(uint256 indexed jobId, uint256 index);
     event MilestonePaid(uint256 indexed jobId, uint256 index, uint256 amount);
+    event DisputePayout(
+        uint256 indexed jobId,
+        uint256 freelancerAmount,
+        uint256 clientRefund
+    );
 
     constructor(address _stablecoin, address _aiAgent) {
         stablecoin = IERC20(_stablecoin);
@@ -249,6 +254,51 @@ contract FreelancePay {
             job.status = JobStatus.DISPUTED;
             emit DisputeResolved(_jobId, false);
         }
+    }
+
+    /**
+     * @dev AI agent resolves dispute with a payout split (basis points)
+     * freelancerBps: 0 - 10000 (10000 = 100%)
+     */
+    function resolveDisputeWithSplit(uint256 _jobId, uint256 freelancerBps)
+        external
+        onlyAIAgent
+    {
+        Job storage job = jobs[_jobId];
+        require(
+            job.status == JobStatus.SUBMITTED || job.status == JobStatus.DISPUTED,
+            "Invalid job status"
+        );
+        require(!job.paymentReleased, "Payment already released");
+        require(job.escrowRemaining > 0, "No escrow remaining");
+        require(freelancerBps <= 10000, "Invalid split");
+
+        job.aiJudgmentMade = true;
+
+        uint256 total = job.escrowRemaining;
+        uint256 freelancerAmount = (total * freelancerBps) / 10000;
+        uint256 clientRefund = total - freelancerAmount;
+
+        job.escrowRemaining = 0;
+        job.paymentReleased = true;
+        job.status = JobStatus.COMPLETED;
+
+        if (freelancerAmount > 0) {
+            require(
+                stablecoin.transfer(job.freelancer, freelancerAmount),
+                "Freelancer payout failed"
+            );
+        }
+        if (clientRefund > 0) {
+            require(
+                stablecoin.transfer(job.client, clientRefund),
+                "Client refund failed"
+            );
+        }
+
+        job.currentMilestone = job.milestoneCount;
+        emit DisputeResolved(_jobId, freelancerBps > 0);
+        emit DisputePayout(_jobId, freelancerAmount, clientRefund);
     }
 
     /**

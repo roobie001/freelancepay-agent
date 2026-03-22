@@ -1,4 +1,5 @@
 import { prisma } from "../../../../lib/prisma";
+import { safeCreateTimelineEvent } from "../../../../lib/timeline";
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
@@ -16,7 +17,7 @@ export async function POST(request) {
         jobId,
         index,
       },
-      include: { job: { include: { client: true, freelancer: true } } },
+      include: { job: { include: { client: true, freelancer: true, agreement: true } } },
     });
 
     if (!milestone) {
@@ -42,6 +43,13 @@ export async function POST(request) {
         },
       });
     }
+
+    await safeCreateTimelineEvent({
+      jobId,
+      agreementId: milestone.job?.agreement?.id || null,
+      type: "milestone_submitted",
+      metadata: { milestoneIndex: index },
+    });
 
     return NextResponse.json(updated);
   } catch (error) {

@@ -1,4 +1,5 @@
 import { prisma } from "../../../lib/prisma";
+import { safeCreateTimelineEvent } from "../../../lib/timeline";
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
@@ -31,6 +32,30 @@ export async function POST(request) {
         description: description || null,
       },
     });
+
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      include: { agreement: true },
+    });
+
+    await safeCreateTimelineEvent({
+      jobId,
+      agreementId: job?.agreement?.id || null,
+      type: "submission_uploaded",
+      metadata: { submissionId: submission.id, freelancerId: freelancer.id },
+    });
+
+    if (job?.clientId) {
+      await prisma.notification.create({
+        data: {
+          userId: job.clientId,
+          type: "submission_uploaded",
+          title: "Work submitted",
+          message: `A new submission was uploaded for job "${job.title}".`,
+          data: { jobId, submissionId: submission.id },
+        },
+      });
+    }
 
     return NextResponse.json(submission);
   } catch (error) {

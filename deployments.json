@@ -1,10 +1,11 @@
 {
   "network": "celoSepolia",
-  "contractAddress": "0xCd5Ce99912DaC98c0874FA792cB2c06eF34496a3",
+  "contractAddress": "0x1da9234ED9A3Ad83407b9A53B7317c9963064E4C",
   "cusdcAddress": "0xEF4d55D6dE8e8d73232827Cd1e9b2F2dBb45bC80",
   "aiAgentAddress": "0x0000000000000000000000000000000000000000",
-  "identityRegistryAddress": "0x0Fa8EF7112cf16D8b1b9569efeFd1a8633388dDC",
-  "reputationRegistryAddress": "0x64625f475E8C49D0d894D6b4075D7ceF025AA7F0",
-  "deploymentBlock": 20681633,
-  "timestamp": "2026-03-20T00:13:43.735Z"
+  "identityRegistryAddress": "0xb525986822791420C6b52A5AA54E4590395aB097",
+  "reputationRegistryAddress": "0x1dEE004B04a8f21f9646a4c1Cd21C3c4b9DfC115",
+  "applicationRegistryAddress": "0x29d3d9E61Ce0c30EC03e63e23870F44F05f6e878",
+  "deploymentBlock": 20821254,
+  "timestamp": "2026-03-21T15:00:42.917Z"
 }

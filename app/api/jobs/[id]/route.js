@@ -10,6 +10,7 @@ export async function GET(request, { params }) {
         client: { select: { name: true, address: true, agentId: true } },
         freelancer: { select: { name: true, address: true, agentId: true } },
         milestones: true,
+        agreement: true,
         applications: {
           include: {
             freelancer: { select: { name: true, address: true } },

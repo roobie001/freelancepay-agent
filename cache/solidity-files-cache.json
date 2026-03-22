@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "C:\\Users\\melob\\Desktop\\freelancepay-agent\\contracts\\FreelancePay.sol": {
-      "lastModificationDate": 1773960006594,
-      "contentHash": "3ab3393aefbec7c86ea02506b219ba8d",
+      "lastModificationDate": 1774096613701,
+      "contentHash": "c7b3eafba94186ae7c6b289d73a15ee5",
       "sourceName": "contracts/FreelancePay.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -111,6 +111,43 @@
       ],
       "artifacts": [
         "AgentReputationRegistry"
+      ]
+    },
+    "C:\\Users\\melob\\Desktop\\freelancepay-agent\\contracts\\ApplicationRegistry.sol": {
+      "lastModificationDate": 1774046688711,
+      "contentHash": "ebaff57b27e2610ab73b83fcafc3ff63",
+      "sourceName": "contracts/ApplicationRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ApplicationRegistry"
       ]
     }
   }

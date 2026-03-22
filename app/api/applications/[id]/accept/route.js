@@ -1,5 +1,6 @@
 import { prisma } from "../../../../../lib/prisma";
 import crypto from "crypto";
+import { safeCreateTimelineEvent } from "../../../../../lib/timeline";
 import { NextResponse } from "next/server";
 
 export async function POST(request, { params }) {
@@ -75,7 +76,7 @@ export async function POST(request, { params }) {
       },
     });
 
-    await prisma.agreement.create({
+    const agreement = await prisma.agreement.create({
       data: {
         jobId: application.jobId,
         applicationId: application.id,
@@ -90,7 +91,30 @@ export async function POST(request, { params }) {
       },
     });
 
-    return NextResponse.json({ ok: true, contractHash });
+    await safeCreateTimelineEvent({
+      jobId: application.jobId,
+      agreementId: agreement.id,
+      type: "proposal_accepted",
+      metadata: {
+        applicationId: application.id,
+        freelancerId: application.freelancerId,
+        contractHash,
+      },
+    });
+
+    if (application.freelancerId) {
+      await prisma.notification.create({
+        data: {
+          userId: application.freelancerId,
+          type: "proposal_accepted",
+          title: "Proposal accepted",
+          message: `Your proposal for "${application.job.title}" was accepted.`,
+          data: { jobId: application.jobId, agreementId: agreement.id },
+        },
+      });
+    }
+
+    return NextResponse.json({ ok: true, contractHash, agreementId: agreement.id });
   } catch (error) {
     console.error("Error accepting application:", error);
     return NextResponse.json(
