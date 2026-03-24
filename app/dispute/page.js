@@ -312,6 +312,10 @@ export default function DisputePage() {
             <p className="text-gray-400 mt-2">
               Logged in as {roleLabel}. Open a dispute and let the AI judge.
             </p>
+            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-green-500/40 bg-green-500/10 px-4 py-1 text-sm text-green-300">
+              <span className="h-2 w-2 rounded-full bg-green-400"></span>
+              AI Judge: Active • Disputes resolved automatically on-chain
+            </div>
           </header>
 
           <section className="bg-gray-900/80 border border-gray-800 rounded-2xl p-6 space-y-4">

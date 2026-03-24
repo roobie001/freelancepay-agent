@@ -13,7 +13,6 @@ const navLinks = [
   { href: "/freelancer", label: "Freelancer", active: "bg-teal-600 text-white" },
   { href: "/dispute", label: "Dispute", active: "bg-yellow-600 text-black" },
   { href: "/disputes", label: "Disputes", active: "bg-yellow-500 text-black" },
-  { href: "/agent", label: "Agent", active: "bg-indigo-600 text-white" },
 ];
 
 export default function Nav() {

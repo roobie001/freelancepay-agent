@@ -358,7 +358,7 @@ export default function PostJob() {
                         className="text-gray-400 hover:text-white"
                         onClick={() => removeSkill(skill)}
                       >
-                        ×
+                        
                       </button>
                     </span>
                   ))}
