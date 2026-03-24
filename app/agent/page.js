@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { useActiveAccount } from "thirdweb/react";
 import Nav from "../Nav";
+import { useToast } from "../components/ToastProvider";
 
 export default function AgentPage() {
   const account = useActiveAccount();
+  const { addToast } = useToast();
   const [agentUri, setAgentUri] = useState("");
   const [agentId, setAgentId] = useState(null);
   const [error, setError] = useState("");
@@ -45,13 +47,13 @@ export default function AgentPage() {
       });
 
       setAgentId(newAgentId);
-      alert(`Agent registered! Agent ID: ${newAgentId}`);
+      addToast(`Agent registered! Agent ID: ${newAgentId}`, "success");
     } catch (e) {
       const message =
         e?.message || (typeof e === "string" ? e : JSON.stringify(e));
       console.error("Agent registration failed:", e);
       setError(message);
-      alert(`Failed to register agent: ${message}`);
+      addToast(`Failed to register agent: ${message}`, "error");
     } finally {
       setLoading(false);
     }

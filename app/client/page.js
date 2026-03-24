@@ -3,9 +3,11 @@
 import { useActiveAccount } from "thirdweb/react";
 import { useEffect, useState } from "react";
 import Nav from "../Nav";
+import { useToast } from "../components/ToastProvider";
 
 export default function ClientDashboard() {
   const account = useActiveAccount();
+  const { addToast } = useToast();
   const [jobs, setJobs] = useState([]);
   const [expandedAppId, setExpandedAppId] = useState(null);
   const [acceptingId, setAcceptingId] = useState(null);
@@ -60,7 +62,7 @@ export default function ClientDashboard() {
     try {
       const { approveMilestoneOnChain } = await import("../../lib/contract");
       await approveMilestoneOnChain(jobId);
-      alert("Milestone approved on-chain!");
+      addToast("Milestone approved on-chain.", "success");
       // Refresh
       const contract = await import("../../lib/contract");
       const job = await contract.getJobOnChain(jobId);
@@ -75,7 +77,7 @@ export default function ClientDashboard() {
       );
     } catch (e) {
       console.error(e);
-      alert("Failed to approve milestone");
+      addToast("Failed to approve milestone.", "error");
     }
   };
 
@@ -93,9 +95,10 @@ export default function ClientDashboard() {
       if (refreshed.ok) {
         setJobs(await refreshed.json());
       }
+      addToast("Milestone marked as paid.", "success");
     } catch (e) {
       console.error(e);
-      alert("Failed to mark milestone paid");
+      addToast("Failed to mark milestone paid.", "error");
     }
   };
 
@@ -117,7 +120,7 @@ export default function ClientDashboard() {
         await acceptProposalOnChain(blockchainId);
       }
 
-      alert("Application accepted!");
+      addToast("Application accepted.", "success");
       // refresh
       const refreshed = await fetch(
         `/api/client/jobs?address=${account.address}`,
@@ -127,7 +130,7 @@ export default function ClientDashboard() {
       }
     } catch (e) {
       console.error(e);
-      alert("Failed to accept application");
+      addToast("Failed to accept application.", "error");
     } finally {
       setAcceptingId(null);
     }
@@ -343,7 +346,7 @@ export default function ClientDashboard() {
                       className="mt-4 bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-white font-semibold"
                       onClick={() => {
                         // Refund logic
-                        alert("Refund initiated");
+                        addToast("Refund initiated.", "info");
                       }}
                     >
                       Refund Escrow

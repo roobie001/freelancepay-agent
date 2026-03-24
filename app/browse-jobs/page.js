@@ -5,9 +5,11 @@ import { useEffect, useState } from "react";
 import { acceptJobOnChain } from "../../lib/contract";
 import ApplyForJobModal from "../components/ApplyForJobModal";
 import Nav from "../Nav";
+import { useToast } from "../components/ToastProvider";
 
 export default function BrowseJobs() {
   const account = useActiveAccount();
+  const { addToast } = useToast();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [acceptedJobs, setAcceptedJobs] = useState(new Set());
@@ -65,7 +67,7 @@ export default function BrowseJobs() {
 
   const handleApply = async (jobId, job) => {
     if (!account?.address) {
-      alert("Please connect your wallet first");
+      addToast("Please connect your wallet first.", "info");
       return;
     }
 
@@ -74,14 +76,14 @@ export default function BrowseJobs() {
         job?.client?.address &&
         job.client.address.toLowerCase() === account.address.toLowerCase()
       ) {
-        alert("You cannot apply to a job you posted.");
+        addToast("You cannot apply to a job you posted.", "error");
         return;
       }
       setActiveJob(job || jobs.find((j) => j.id === jobId));
       setShowModal(true);
     } catch (error) {
       console.error('Error applying to job:', error);
-      alert("Failed to apply to job");
+      addToast("Failed to apply to job.", "error");
     }
   };
 
@@ -94,19 +96,19 @@ export default function BrowseJobs() {
           account?.address &&
           job.client.address.toLowerCase() === account.address.toLowerCase()
         ) {
-          alert("You cannot accept your own job.");
+          addToast("You cannot accept your own job.", "error");
           return;
         }
         const idToUse = typeof blockchainId === "number" ? blockchainId : jobId;
         await acceptJobOnChain(idToUse);
-        alert("Job accepted on-chain!");
+        addToast("Job accepted on-chain.", "success");
         setAcceptedJobs((prev) => new Set([...prev, idToUse]));
       } catch (e) {
         console.error(e);
-        alert("Failed to accept job");
+        addToast("Failed to accept job.", "error");
       }
     } else {
-      alert("(Mock) Job accepted");
+      addToast("Job accepted (mock).", "info");
       setAcceptedJobs((prev) => new Set([...prev, jobId]));
     }
   };
@@ -117,13 +119,13 @@ export default function BrowseJobs() {
         const { submitMilestoneOnChain } = await import("../../lib/contract");
         const idToUse = typeof blockchainId === "number" ? blockchainId : jobId;
         await submitMilestoneOnChain(idToUse);
-        alert("Work submitted on-chain!");
+        addToast("Work submitted on-chain.", "success");
       } catch (e) {
         console.error(e);
-        alert("Failed to submit work");
+        addToast("Failed to submit work.", "error");
       }
     } else {
-      alert("(Mock) Work submitted");
+      addToast("Work submitted (mock).", "info");
     }
   };
 

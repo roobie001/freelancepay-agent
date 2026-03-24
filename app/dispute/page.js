@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useActiveAccount } from "thirdweb/react";
 import Nav from "../Nav";
+import { useToast } from "../components/ToastProvider";
 
 const DISPUTE_TYPES = [
   { label: "Scope not met", value: "scope_not_met" },
@@ -34,6 +35,7 @@ const MOCK_JOBS = [
 
 export default function DisputePage() {
   const account = useActiveAccount();
+  const { addToast } = useToast();
   const [jobs, setJobs] = useState([]);
   const [role, setRole] = useState("client");
   const [loadingJobs, setLoadingJobs] = useState(false);
@@ -144,7 +146,7 @@ export default function DisputePage() {
 
   const handleAddEvidence = (isAppeal = false) => {
     if (!evidenceUri) {
-      alert("Please provide evidence or upload a file.");
+      addToast("Please provide evidence or upload a file.", "info");
       return;
     }
     const item = {
@@ -166,11 +168,11 @@ export default function DisputePage() {
 
   const handleCreateDispute = async () => {
     if (!jobId || !contractId) {
-      alert("Select a job to auto-fill the contract.");
+      addToast("Select a job to auto-fill the contract.", "info");
       return;
     }
     if (!details.trim()) {
-      alert("Please enter dispute details.");
+      addToast("Please enter dispute details.", "info");
       return;
     }
     setLoading(true);
@@ -203,9 +205,10 @@ export default function DisputePage() {
       const dispute = await res.json();
       setDisputeId(dispute.id);
       setCanAppeal(false);
+      addToast("Dispute created successfully.", "success");
     } catch (err) {
       console.error(err);
-      alert("Failed to create dispute");
+      addToast("Failed to create dispute.", "error");
     } finally {
       setLoading(false);
     }
@@ -213,7 +216,7 @@ export default function DisputePage() {
 
   const handleResolve = async () => {
     if (!disputeId) {
-      alert("Create a dispute first.");
+      addToast("Create a dispute first.", "info");
       return;
     }
     setLoading(true);
@@ -228,9 +231,10 @@ export default function DisputePage() {
       const data = await res.json();
       setResult(data);
       setCanAppeal(true);
+      addToast("AI decision generated.", "success");
     } catch (err) {
       console.error(err);
-      alert("AI dispute failed");
+      addToast("AI dispute failed.", "error");
     } finally {
       setLoading(false);
     }
@@ -238,7 +242,7 @@ export default function DisputePage() {
 
   const handleAppeal = async () => {
     if (!disputeId || !appealReason) {
-      alert("Please enter an appeal reason.");
+      addToast("Please enter an appeal reason.", "info");
       return;
     }
     setLoading(true);
@@ -267,12 +271,12 @@ export default function DisputePage() {
           paymentSplit: data.decision.paymentSplit,
         });
       }
-      alert("Appeal submitted");
+      addToast("Appeal submitted.", "success");
       setAppealReason("");
       setAppealEvidenceItems([]);
     } catch (err) {
       console.error(err);
-      alert("Appeal failed");
+      addToast("Appeal failed.", "error");
     } finally {
       setLoading(false);
     }
@@ -413,12 +417,13 @@ export default function DisputePage() {
                     const json = await res.json();
                     if (res.ok) {
                       setEvidenceUri(json.ipfs || json.gateway);
+                      addToast("Evidence uploaded.", "success");
                     } else {
-                      alert(json.error || "Upload failed");
+                      addToast(json.error || "Upload failed.", "error");
                     }
                   } catch (err) {
                     console.error(err);
-                    alert("Upload failed");
+                    addToast("Upload failed.", "error");
                   }
                 }}
               />

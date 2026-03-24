@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useActiveAccount } from "thirdweb/react";
 import Nav from "../Nav";
+import { useToast } from "../components/ToastProvider";
 
 const FILTERS = ["all", "pending", "resolved", "executed"];
 
@@ -42,6 +43,7 @@ function getExplorerTxUrl(txHash) {
 
 export default function DisputesDashboardPage() {
   const account = useActiveAccount();
+  const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [disputes, setDisputes] = useState([]);
   const [filter, setFilter] = useState("all");
@@ -124,9 +126,10 @@ export default function DisputesDashboardPage() {
       const refreshed = await fetch(`/api/disputes?address=${account.address}`);
       const data = await refreshed.json();
       setDisputes(data);
+      addToast("Dispute resolved and payout initiated.", "success");
     } catch (err) {
       console.error(err);
-      alert("Failed to resolve dispute");
+      addToast("Failed to resolve dispute.", "error");
     } finally {
       setLoading(false);
     }
@@ -135,7 +138,7 @@ export default function DisputesDashboardPage() {
   const handleAppealSubmit = async () => {
     if (!appealTarget) return;
     if (!appealReason.trim()) {
-      alert("Please enter an appeal reason.");
+      addToast("Please enter an appeal reason.", "info");
       return;
     }
     setLoading(true);
@@ -159,12 +162,13 @@ export default function DisputesDashboardPage() {
       const refreshed = await fetch(`/api/disputes?address=${account.address}`);
       const data = await refreshed.json();
       setDisputes(data);
+      addToast("Appeal submitted.", "success");
       setAppealTarget(null);
       setAppealReason("");
       setAppealEvidence([]);
     } catch (err) {
       console.error(err);
-      alert("Failed to submit appeal");
+      addToast("Failed to submit appeal.", "error");
     } finally {
       setLoading(false);
     }
@@ -172,7 +176,7 @@ export default function DisputesDashboardPage() {
 
   const addAppealEvidence = () => {
     if (!evidenceUri) {
-      alert("Add an evidence link first.");
+      addToast("Add an evidence link first.", "info");
       return;
     }
     setAppealEvidence((prev) => [

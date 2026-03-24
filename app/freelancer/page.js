@@ -3,9 +3,11 @@
 import { useActiveAccount } from "thirdweb/react";
 import { useEffect, useState } from "react";
 import Nav from "../Nav";
+import { useToast } from "../components/ToastProvider";
 
 export default function FreelancerDashboard() {
   const account = useActiveAccount();
+  const { addToast } = useToast();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(null);
@@ -34,14 +36,14 @@ export default function FreelancerDashboard() {
 
   const handleSubmitMilestone = async (job) => {
     if (!job?.blockchainId) {
-      alert("Job is not linked to blockchain yet.");
+      addToast("Job is not linked to blockchain yet.", "info");
       return;
     }
     try {
       setSubmitting(job.id);
       const { submitMilestoneOnChain } = await import("../../lib/contract");
       await submitMilestoneOnChain(job.blockchainId);
-      alert("Milestone submitted on-chain!");
+      addToast("Milestone submitted on-chain.", "success");
       const next = job.milestones?.find((m) => m.status === "pending");
       if (next) {
         await fetch("/api/milestones/submit", {
@@ -58,7 +60,7 @@ export default function FreelancerDashboard() {
       }
     } catch (e) {
       console.error(e);
-      alert("Failed to submit milestone");
+      addToast("Failed to submit milestone.", "error");
     } finally {
       setSubmitting(null);
     }
@@ -68,7 +70,7 @@ export default function FreelancerDashboard() {
     const uri = deliverableUri[job.id] || "";
     const desc = deliverableDesc[job.id] || "";
     if (!uri) {
-      alert("Please provide a deliverable link.");
+      addToast("Please provide a deliverable link.", "info");
       return;
     }
     try {
@@ -91,10 +93,10 @@ export default function FreelancerDashboard() {
       if (refreshed.ok) {
         setJobs(await refreshed.json());
       }
-      alert("Deliverable submitted!");
+      addToast("Deliverable submitted.", "success");
     } catch (e) {
       console.error(e);
-      alert("Failed to submit deliverable");
+      addToast("Failed to submit deliverable.", "error");
     } finally {
       setUploading(null);
     }
@@ -213,12 +215,13 @@ export default function FreelancerDashboard() {
                                   ...prev,
                                   [job.id]: json.ipfs || json.gateway,
                                 }));
+                                addToast("File uploaded.", "success");
                               } else {
-                                alert(json.error || "Upload failed");
+                                addToast(json.error || "Upload failed.", "error");
                               }
                             } catch (err) {
                               console.error(err);
-                              alert("Upload failed");
+                              addToast("Upload failed.", "error");
                             } finally {
                               setUploading(null);
                             }
